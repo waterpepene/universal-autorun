@@ -1,14 +1,14 @@
 import threading
-from win32gui import GetWindowText, EnumWindows
+from win32gui import GetForegroundWindow, GetWindowText, EnumWindows
 from win32api import GetWindowLong, GetAsyncKeyState
 from win32con import GWL_STYLE, WS_VISIBLE, VK_ADD, VK_CONTROL, VK_NUMPAD8, VK_RSHIFT, VK_SHIFT
 from win32process import GetWindowThreadProcessId
 from time import sleep
 import os
 import ctypes
+from re import search
 
 SendInput = ctypes.windll.user32.SendInput
-
 W = 0x11
 NP_8 = 0x48
 
@@ -139,6 +139,7 @@ def find_games_folder() -> str:
 
 def read_games():
     games_path = find_games_folder()
+
     with open(fr"{games_path}", "r") as games_file:
         for game in games_file:
             yield game.strip("\n")

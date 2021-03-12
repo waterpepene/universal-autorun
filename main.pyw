@@ -1,6 +1,4 @@
 from functions import *
-from re import search
-from win32gui import GetForegroundWindow, GetWindowText
 
 control = ThreadControl()
 control.start()
@@ -20,7 +18,7 @@ while "Running":
     else:
         control.pause()
 
-    sleep(5)
+    sleep(10)
 
 
 

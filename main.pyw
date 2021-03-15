@@ -18,7 +18,7 @@ while "Running":
     else:
         control.pause()
 
-    sleep(10)
+    sleep(1)
 
 
 

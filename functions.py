@@ -1,7 +1,7 @@
 import threading
 from win32gui import GetForegroundWindow, GetWindowText, EnumWindows
 from win32api import GetWindowLong, GetAsyncKeyState
-from win32con import GWL_STYLE, WS_VISIBLE, VK_ADD, VK_CONTROL, VK_NUMPAD8, VK_RSHIFT, VK_SHIFT
+from win32con import GWL_STYLE, WS_VISIBLE, VK_ADD, VK_RCONTROL, VK_NUMPAD8
 from win32process import GetWindowThreadProcessId
 from time import sleep
 import os
@@ -9,9 +9,9 @@ import ctypes
 from re import search
 
 SendInput = ctypes.windll.user32.SendInput
-W = 0x11
-NP_8 = 0x48
+W_KEY = 0x11
 
+# Code taken from https://github.com/Sentdex/pygta5/blob/master/directkeys.py
 # C struct redefinitions
 PUL = ctypes.POINTER(ctypes.c_ulong)
 
@@ -50,6 +50,7 @@ class Input(ctypes.Structure):
                 ("ii", Input_I)]
 
 
+# Actual Functions
 def press_key(hexKeyCode):
     extra = ctypes.c_ulong(0)
     ii_ = Input_I()
@@ -78,23 +79,18 @@ class ThreadControl(threading.Thread):
         while self.__running.isSet():
             self.__flag.wait()
 
-            if GetAsyncKeyState(VK_ADD) and GetAsyncKeyState(VK_NUMPAD8):    # checks if the + button was clicked
+            if GetAsyncKeyState(VK_NUMPAD8) and GetAsyncKeyState(VK_ADD):  # checks if the + button was clicked
+                press_key(W_KEY)
                 press_key(VK_NUMPAD8)
-                press_key(W)
-
-            elif GetAsyncKeyState(VK_RSHIFT) and GetAsyncKeyState(VK_ADD):
-                press_key(W)
-                press_key(VK_SHIFT)
 
             elif GetAsyncKeyState(VK_ADD):
-                press_key(W)
+                press_key(W_KEY)
 
-            if GetAsyncKeyState(VK_CONTROL) and GetAsyncKeyState(VK_ADD):    # checks if the ctrl button was clicked
+            if GetAsyncKeyState(VK_RCONTROL):
+                release_key(W_KEY)
                 release_key(VK_NUMPAD8)
-                release_key(W)
-                release_key(VK_RSHIFT)
 
-            sleep(0.3)
+            sleep(0.1)
 
     def pause(self):
         self.__flag.clear()  # Set to False to block the thread

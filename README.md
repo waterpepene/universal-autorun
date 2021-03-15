@@ -11,17 +11,16 @@ The window name is usually found as in the picture below.
 
 ### **Keybinds**
 
-    "CTRL and Numpad+": Stops the auto-run
+    "Right CTRL": Stops the auto-run
 
     "+": Holds "W" pressed.
 
     "+ and Numpad 8": Holds down "W" and "Numpad 8"
 
-    "Right Shift and +": Holds down "Shift" and "W"
 
 
 ### **To Run**
 
 `pip install -r requirements.txt`
 
-and run main.pyw
+Run main.pyw

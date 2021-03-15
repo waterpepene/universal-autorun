@@ -7,7 +7,7 @@
 For example to use it in GTA5 go to games.txt and write the name of the window.
 The window name is usually found as in the picture below.
 
- ![image showing what the name of the window is](window name.png)
+![image showing what the name of the window is](window_name.png)
 
 ### **Keybinds**
 

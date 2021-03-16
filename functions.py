@@ -1,17 +1,18 @@
 import threading
-from win32gui import GetForegroundWindow, GetWindowText, EnumWindows
-from win32api import GetWindowLong, GetAsyncKeyState
-from win32con import GWL_STYLE, WS_VISIBLE, VK_ADD, VK_RCONTROL, VK_NUMPAD8
-from win32process import GetWindowThreadProcessId
+from win32gui import GetForegroundWindow, GetWindowText
+from win32api import GetAsyncKeyState, GetKeyState
+from win32con import VK_ADD, VK_RCONTROL, VK_NUMPAD8, VK_RSHIFT
 from time import sleep
 import os
 import ctypes
 from re import search
 
-SendInput = ctypes.windll.user32.SendInput
-W_KEY = 0x11
-
 # Code taken from https://github.com/Sentdex/pygta5/blob/master/directkeys.py
+SendInput = ctypes.windll.user32.SendInput
+# These keys are DirectInput scan codes and they are used because win32 keys don't work in DirectX apps
+W_KEY = 0x11
+NP_8 = 0x48
+SHIFT_KEY = 0x2A
 # C struct redefinitions
 PUL = ctypes.POINTER(ctypes.c_ulong)
 
@@ -51,6 +52,7 @@ class Input(ctypes.Structure):
 
 
 # Actual Functions
+# This function holds down a given key.
 def press_key(hexKeyCode):
     extra = ctypes.c_ulong(0)
     ii_ = Input_I()
@@ -59,6 +61,7 @@ def press_key(hexKeyCode):
     ctypes.windll.user32.SendInput(1, ctypes.pointer(x), ctypes.sizeof(x))
 
 
+# This function releases a given key.
 def release_key(hexKeyCode):
     extra = ctypes.c_ulong(0)
     ii_ = Input_I()
@@ -79,18 +82,29 @@ class ThreadControl(threading.Thread):
         while self.__running.isSet():
             self.__flag.wait()
 
-            if GetAsyncKeyState(VK_NUMPAD8) and GetAsyncKeyState(VK_ADD):  # checks if the + button was clicked
+            # checks if the '+' button and 'numpad 8' were pressed
+            if GetAsyncKeyState(VK_NUMPAD8) and GetAsyncKeyState(VK_ADD):
+                while GetKeyState(VK_NUMPAD8): pass  # wait until Numpad 8 is released
+                press_key(NP_8)
                 press_key(W_KEY)
-                press_key(VK_NUMPAD8)
 
+            # checks if the 'right shift' button and '+' were pressed
+            elif GetAsyncKeyState(VK_RSHIFT) and GetAsyncKeyState(VK_ADD):
+                while GetKeyState(VK_RSHIFT): pass  # wait until Right Shift is released
+                press_key(W_KEY)
+                press_key(SHIFT_KEY)
+
+            # checks if the '+' button was pressed
             elif GetAsyncKeyState(VK_ADD):
                 press_key(W_KEY)
 
+            # checks if the 'right ctrl' button is pressed and releases 'shift', 'w' and 'numpad 8'
             if GetAsyncKeyState(VK_RCONTROL):
+                release_key(SHIFT_KEY)
                 release_key(W_KEY)
-                release_key(VK_NUMPAD8)
+                release_key(NP_8)
 
-            sleep(0.1)
+            sleep(0.2)
 
     def pause(self):
         self.__flag.clear()  # Set to False to block the thread
@@ -103,28 +117,7 @@ class ThreadControl(threading.Thread):
         self.__running.clear()  # Set to False
 
 
-def enum_windows_proc(wnd, param):
-    pid = param.get("pid", None)
-    data = param.get("data", None)
-
-    if pid is None or GetWindowThreadProcessId(wnd)[1] == pid:
-        text = GetWindowText(wnd)
-        if text:
-            if (GetWindowLong(wnd, GWL_STYLE) & WS_VISIBLE) and data is not None:
-                data.append(text)
-
-
-def enum_process_windows(pid=None) -> list:
-    data = []
-    param = {
-        "pid": pid,
-        "data": data,
-    }
-    EnumWindows(enum_windows_proc, param)
-
-    return data
-
-
+# Looks for the games.txt file in the current folder and returns the path.
 def find_games_folder() -> str:
     current_dir = os.getcwd()
     games_file_name = "games.txt"
@@ -133,6 +126,7 @@ def find_games_folder() -> str:
     return str(games_file_path)
 
 
+# Function used to read games from the games.txt file and yield them
 def read_games():
     games_path = find_games_folder()
 

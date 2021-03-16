@@ -17,6 +17,8 @@ The window name is usually found as in the picture below.
 
     "+ and Numpad 8": Holds down "W" and "Numpad 8"
 
+    "+ and Right Shift": Holds down "W" and "Shift"
+
 
 
 ### **To Run**
